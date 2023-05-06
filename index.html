@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Frog Recorder</title>
+    <style>
+      /* Add CSS styles for the user interface */
+      #frog-container {
+        width: 400px;
+        height: 400px;
+        position: relative;
+      }
+      #frog {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+      #listening {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 2rem;
+        font-weight: bold;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="frog-container">
+      <img id="frog" src="frog.gif" alt="Funny Frog GIF">
+      <div id="listening" style="display:none">Listening...</div>
+    </div>
+    <button id="record-btn">Repeat Voice</button>
+    <audio id="recorded-audio" controls></audio>
+    <a id="download-btn" download="recorded-audio.wav" style="display:none">Download Audio</a>
+    <script>
+      // Add JavaScript code for recording and playing back voice
+      const recordBtn = document.getElementById('record-btn');
+      const listeningMsg = document.getElementById('listening');
+      const frogImg = document.getElementById('frog');
+      const audioElem = document.getElementById('recorded-audio');
+      const downloadBtn = document.getElementById('download-btn');
+      let mediaRecorder;
+      let chunks = [];
+
+      recordBtn.addEventListener('click', () => {
+        // Change the frog image to the "listening" state
+        frogImg.style.display = 'none';
+        listeningMsg.style.display = 'flex';
+
+        // Request access to the microphone
+        navigator.mediaDevices.getUserMedia({ audio: true })
+          .then((stream) => {
+            // Create a new media recorder instance
+            mediaRecorder = new MediaRecorder(stream);
+
+            // Add event listeners for the media recorder
+            mediaRecorder.addEventListener('dataavailable', (event) => {
+              chunks.push(event.data);
+            });
+
+            mediaRecorder.addEventListener('stop', () => {
+              // Combine the audio chunks into a single audio blob
+              const audioBlob = new Blob(chunks, { type: 'audio/wav' });
+
+              // Create a new audio element with the recorded audio
+              const audioUrl = URL.createObjectURL(audioBlob);
+              audioElem.src = audioUrl;
+              audioElem.playbackRate = 1.5;
+
+              // Show the playback and download buttons
+              audioElem.style.display = 'block';
+              downloadBtn.style.display = 'block';
+
+              // Reset the recording state
+              chunks = [];
+              frogImg.style.display = 'block';
+              listeningMsg.style.display = 'none';
+            });
+
+            // Start recording
+            mediaRecorder.start();
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      });
+
+      // Stop recording when the record button is released
+      recordBtn.addEventListener('mouseup', () => {
+        mediaRecorder.stop();
+      });
+
+     // Download the recorded audio file when the download button is clicked
+downloadBtn.addEventListener('click', () => {
+const audioUrl = audioElem.src;
+downloadBtn.href = audioUrl;
+});
+</script>
+
+  </body>
+</html>
